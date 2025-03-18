@@ -9,7 +9,7 @@ export default function Submit({ text, setText }: SubmitProps) {
   return (
     <>
       <input
-        className="p-2 border-2 border-primary rounded-md focus:outline-none"
+        className="p-2 border-2 border-primary rounded-md focus:outline-none w-3/4"
         value={text}
         onChange={(e) => setText(e.target.value)}
       />

@@ -14,7 +14,7 @@ export default function App() {
   const [todos, setTodo] = useState<Todo[]>(loadTodo());
 
   async function fetchData() {
-    const res = await fetch("https://fakestoreapi.com/products");
+    const res = await fetch("http://localhost:3000/todos");
     const data = await res.json();
     console.log(data);
   }
@@ -70,13 +70,13 @@ export default function App() {
 
   return (
     <>
-      <header className="rleative bg-primary h-1/10">
+      <header className=" bg-primary h-1/10">
         <h2 className="text-2xl text-white font-bold absolute top-8 left-5">
           My To-Do List!
         </h2>
       </header>
-      <div className="h-full" style={{ maxWidth: "600px", margin: "20px" }}>
-        <div className="h-full max-h-8/10 overflow-y-auto overscroll-none ">
+      <div className="h-9/10 max-h-screen overflow-hidden" style={{ maxWidth: "600px", margin: "20px" }}>
+        <div className="h-fit max-h-8/10 overflow-y-auto overscroll-auto ">
           <ul>
             {todos.map((todo, index) => (
               <Todo
