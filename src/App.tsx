@@ -1,71 +1,60 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "tailwindcss";
 import Todo from "./Todo";
 import Submit from "./Submit";
 
 export interface Todo {
+  id: number;
   text: string;
   color: string;
   done: boolean;
 }
 
+const API_URL = "http://localhost:3000";
 export default function App() {
   const [text, setText] = useState("");
-  const [todos, setTodo] = useState<Todo[]>(loadTodo());
-
-  async function fetchData() {
-    const res = await fetch("https://fakestoreapi.com/products");
-    const data = await res.json();
-    console.log(data);
-  }
-
-  fetchData();
+  const [todos, setTodos] = useState<Todo[]>([]);
 
   useEffect(() => {
-    saveTodo();
-  }, [todos]);
+    async function fetchData() {
+      const res = await fetch(`${API_URL}/todos`);
+      const json = await res.json();
+      setTodos(json);
+    }
+    fetchData();
+  }, []);
 
-  function updateList(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (text == "") return;
-    setTodo([...todos, { text, color: "black", done: false }]);
+  async function postTodo() {
+    if (text === "") {
+      return;
+    }
+    const res = await fetch(`${API_URL}/todos`, {
+      method: "POST",
+      body: JSON.stringify({ text }),
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) return;
+
+    const todo = await res.json();
+    setTodos([...todos, todo]);
     setText("");
   }
 
-  function updateStatus(index: number) {
-    setTodo(
-      todos.map((currTodo, j) => {
-        if (j == index) {
-          if (currTodo.color == "black") {
-            currTodo.color = "#A277C3";
-            currTodo.done = true;
-          } else {
-            currTodo.color = "black";
-            currTodo.done = false;
-          }
-        }
-        return currTodo;
-      })
-    );
+  async function deleteTodo(id: number) {
+    const res = await fetch(`${API_URL}/todos/${id}`, { method: "DELETE" });
+    if (!res.ok) return;
+    setTodos(todos.filter((todo) => todo.id !== id));
   }
 
-  function deleteTodo(index: number) {
-    setTodo(
-      todos.filter((_, j) => {
-        if (j == index) {
-          return false;
-        }
-        return true;
-      })
-    );
-  }
-
-  function saveTodo() {
-    localStorage.setItem("key", JSON.stringify(todos));
-  }
-
-  function loadTodo() {
-    return JSON.parse(localStorage.getItem("key") ?? "[]");
+  async function updateStatus(id: number, done: boolean) {
+    const res = await fetch(`${API_URL}/todos/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ done }),
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) return;
+    const updatedTodo = await res.json();
+    setTodos(todos.map((todo) => (todo.id === id ? updatedTodo : todo)));
   }
 
   return (
@@ -78,17 +67,23 @@ export default function App() {
       <div className="h-full" style={{ maxWidth: "600px", margin: "20px" }}>
         <div className="h-full max-h-8/10 overflow-y-auto overscroll-none ">
           <ul>
-            {todos.map((todo, index) => (
+            {todos.map((todo) => (
               <Todo
+                key={todo.id}
                 todo={todo}
-                index={index}
                 updateStatus={updateStatus}
                 deleteTodo={deleteTodo}
               />
             ))}
           </ul>
         </div>
-        <form className="mt-3 flex" onSubmit={updateList}>
+        <form
+          className="mt-3 flex"
+          onSubmit={(e) => {
+            e.preventDefault();
+            postTodo();
+          }}
+        >
           <Submit text={text} setText={setText} />
         </form>
       </div>
